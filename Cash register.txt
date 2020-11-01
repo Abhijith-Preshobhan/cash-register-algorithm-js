@@ -1,0 +1,54 @@
+function checkCashRegister(price, cash, cid) {
+  // Calculating change and converting floating point numbers into decimals
+  let change = (cash * 100) - (price * 100);
+  let cashInDrawer = cid.reduce((a, b) => a + (b[1] * 100), 0);
+  let returnObject = {
+    status: "OPEN",
+    change: []
+    };
+
+  if(cashInDrawer < change) {
+    returnObject.status = "INSUFFICIENT_FUNDS";
+    return returnObject;
+  }
+
+  if(cashInDrawer == change) {
+    returnObject.status = "CLOSED";
+    returnObject.change = cid;
+    return returnObject;
+  }
+
+  let denomArr = [1, 5, 10, 25, 100, 500, 1000, 2000, 10000];
+  let cashBal = cid.map((item) => Math.round(item[1] * 100));
+  // ind is the index of the closest useful denomination to the change
+  let ind = denomArr.indexOf(denomArr.reduce((a, b) => b > change ? a : (change - b) > (change - a) ? a : b));
+  // Iterating through cashBal for change
+  for(let i = ind; i >= 0; i--) { 
+
+    if(cashBal[i] == 0 || change < denomArr[i]) {
+      continue;
+    }
+    // Finding suitable deductible for change and making necessary alterations
+    let deductible = Math.min(cashBal[i], Math.floor(change/denomArr[i]) * denomArr[i]);
+    change = change - deductible;
+    returnObject.change.push([cid[i][0], deductible/100]);
+  
+    if(change == 0) {
+      break;
+    }
+  }
+  // change will be nonzero if useful cash denominations were insufficient
+  if(change != 0) {
+    returnObject.status = "INSUFFICIENT_FUNDS";
+    returnObject.change = [];
+    return returnObject
+  }
+
+  return returnObject;
+}
+
+// Tests here
+checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]);
+console.log(checkCashRegister(3.26, 100, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]))
+console.log(checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]))
+console.log(checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 1], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]));
